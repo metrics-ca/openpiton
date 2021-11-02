@@ -34,6 +34,10 @@ fi
 #  export VERA_HOME
 #fi
 
+# Please define DSIM_HOME only if you have DSIM, otherwise comment it out.
+
+#export DSIM_HOME=
+
 # Please define VCS_HOME only if you have VCS, otherwise comment it out.
 
 #export VCS_HOME=
@@ -93,6 +97,11 @@ export PERL_CMD="/usr/bin/perl"
 # Set path
 
 NEWPATH="$DV_ROOT/tools/bin"
+
+if [ ! -z $DSIM_HOME ]
+then
+NEWPATH=$NEWPATH:$DSIM_HOME/bin
+fi
 
 if [ ! -z $VCS_HOME ]
 then

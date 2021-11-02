@@ -34,6 +34,9 @@
 #ifdef __ICARUS__
 #include "icarus-compat.h"
 #endif
+#ifdef USE_VPI
+#include "vpi_user.h"
+#endif
 //do iob operations
 
 class iob {

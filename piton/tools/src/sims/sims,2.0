@@ -205,7 +205,7 @@ Getopt::Long::Configure ('no_auto_abbrev') ;
         'other_sim_run' => 0,
         'sim_run_args' => [],
         'other_sim_run_cmd' => "",
-        'sim_type' => "vcs",
+        'sim_type' => "dsim",
         'sim_q_command' => "/bin/sh",
         'sims_config' => "",
         'simslog' => 1,
@@ -224,6 +224,9 @@ Getopt::Long::Configure ('no_auto_abbrev') ;
         'use_config' => 1,
         'vcd' => 0,
         'vcdfile' => "",
+        'dsim_build' => 0,
+        'dsim_build_args' => [],
+        'dsim_run' => 0,
         'vcs_build' => 0,
         'vcs_build_args' => [],
         'clean' => 0,
@@ -498,7 +501,7 @@ else { $model_path = "$model_dir/$opt{model}/$opt{build_id}" ; }
 # create the model area if necessary
 ################################################################################
 
-&create_model_path () if ($opt{vcs_build} or $opt{other_sim_build} or
+&create_model_path () if ($opt{dsim_build} or $opt{vcs_build} or $opt{other_sim_build} or
                           $opt{icv_build} or $opt{ncv_build} or
                           $opt{msm_build} or $opt{vlt_build} or
 						  $opt{riv_build}) ;
@@ -507,7 +510,7 @@ else { $model_path = "$model_dir/$opt{model}/$opt{build_id}" ; }
 # do some pre building stuff - generate flist
 ################################################################################
 
-&pre_build () if ($opt{vcs_build} or $opt{other_sim_build} or
+&pre_build () if ($opt{dsim_build} or $opt{vcs_build} or $opt{other_sim_build} or
                   $opt{icv_build} or $opt{ncv_build} or
                   $opt{msm_build} or $opt{vlt_build} or
 				  $opt{riv_build}) ;
@@ -516,7 +519,7 @@ else { $model_path = "$model_dir/$opt{model}/$opt{build_id}" ; }
 # build the simulation model
 ################################################################################
 
-&generic_sim_build () if ($opt{vcs_build} or $opt{ncv_build} or
+&generic_sim_build () if ($opt{dsim_build} or $opt{vcs_build} or $opt{ncv_build} or
                           $opt{icv_build} or $opt{other_sim_build} or
                           $opt{msm_build} or $opt{vlt_build} or
 						  $opt{riv_build}) ;
@@ -568,7 +571,7 @@ if (    -e "diag.pl" and
 # post process the output
 ################################################################################
 
-&post_process if ($opt{vcs_run} or $opt{ncv_run} or
+&post_process if ($opt{dsim_run} or $opt{vcs_run} or $opt{ncv_run} or
                   $opt{icv_run} or $opt{other_sim_run} or
                   $opt{msm_run} or $opt{vlt_run} or $opt{riv_run}) ;
 
@@ -899,7 +902,9 @@ sub regress
       my $cmd ;
       $cmd .= "$prg " ;
       $cmd .= "-nosimslog " ;
-      if (($opt{sim_type}) eq "vcs") {
+      if (($opt{sim_type}) eq "dsim") {
+          $cmd .= "-dsim_build " ;
+      } elsif (($opt{sim_type}) eq "vcs") {
           $cmd .= "-vcs_build " ;
       } elsif (($opt{sim_type}) eq "ncv") {
           $cmd .= "-ncv_build " ;
@@ -973,7 +978,9 @@ sub regress
 
           my @cmd ;
           # push (@cmd, "$prg") ;
-          if (($opt{sim_type}) eq "vcs") {
+          if (($opt{sim_type}) eq "dsim") {
+            push (@cmd, "-dsim_run") ;
+          } elsif (($opt{sim_type}) eq "vcs") {
             push (@cmd, "-vcs_run") ;
           } elsif (($opt{sim_type}) eq "ncv") {
             push (@cmd, "-ncv_run") ;
@@ -1296,7 +1303,7 @@ sub pre_build
 }
 
 ################################################################################
-# generic simulator build (incorporates vcs, ncv, icv, msm, vlt, other)
+# generic simulator build (incorporates dsim, vcs, ncv, icv, msm, vlt, other)
 ################################################################################
 
 sub generic_sim_build
@@ -1309,6 +1316,7 @@ sub generic_sim_build
     # go to the model area
     chdir $model_path or die ("DIE. Can't cd to $model_path") ;
 
+# I suspect a bug here:  This if includes more than just vcs and ncv stuff
     if ($opt{vcs_build} or $opt{ncv_build}) {
       # copy the sdf file
       my $sdf_file = "$opt{env_base}/cmp_top.sdf" ;
@@ -1347,7 +1355,44 @@ sub generic_sim_build
       print "$prg: LM_LICENSE_FILE : none\n";
     }
 
-    push (@{$opt{sim_build_args}}, "-f flist") ;
+
+    if ($opt{dsim_build}) {
+      foreach my $top_n (@{$opt{toplevel}}) {
+        push(@{$opt{dsim_build_args}}, "-top $top_n") ;
+      }
+      push (@{$opt{dsim_build_args}}, "+acc+rwb");
+      push (@{$opt{dsim_build_args}}, "-linebuf");
+      push (@{$opt{dsim_build_args}}, "-l compile.log") ;
+
+      # some SystemVerilog-specific options
+      if ($opt{ariane}) {
+          push (@{$opt{dsim_build_args}}, "-sv") ;
+          #push (@{$opt{dsim_build_args}}, "-sysvlog-ext .sv -vlog_sv2012") ;
+          push (@{$opt{dsim_build_args}}, "+incdir+$ENV{UVM_HOME}/src $ENV{UVM_HOME}/src/uvm_pkg.sv") ;
+      }
+
+      push (@{$opt{sim_build_args}}, "-f flist") ;
+
+      #PLI option
+      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libiob_ncv.so");
+      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libjbus_mon_ncv.so");
+      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libmem_pli_ncv.so");
+      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libmonitor_ncv.so");
+      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libsjm_ncv.so");
+      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libsocket_pli_ncv.so");
+      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libjpcommon_ncv.so");
+      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libmem_pli_ncv.so");
+      #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libutility_ncv:utility_boot");
+      
+      push (@{$opt{dsim_build_args}}, "+define+PITON_DPI");
+      push (@{$opt{dsim_build_args}}, "-allow-int-enum-assign");
+      push (@{$opt{dsim_build_args}}, "-warn DefNetNone");
+
+      # Run time argument. Hack.
+      push (@{$opt{dsim_build_args}}, "-sv_lib $ENV{UVM_HOME}/src/dpi/libuvm_dpi.so");
+
+    }
+
 
     if ($opt{vcs_build}) {
       $lib_path = "-L$ENV{DV_ROOT}/tools/";
@@ -1447,7 +1492,13 @@ sub generic_sim_build
       push (@{$opt{icv_build_args}}, "-g 2001") ;
     }
 
-    # copy vcs/icv/ncv/msm/vlt_build_args to generic sim_build_args
+    # copy dsim/vcs/icv/ncv/msm/vlt_build_args to generic sim_build_args
+    if ($opt{dsim_build}) {
+      foreach my $x (@{$opt{dsim_build_args}})
+      {
+          push (@{$opt{sim_build_args}}, $x);
+      }
+    }
     if ($opt{vcs_build}) {
       foreach my $x (@{$opt{vcs_build_args}})
       {
@@ -1498,6 +1549,9 @@ sub generic_sim_build
     # build the model
     print "$prg: Building rtl model\n" ;
 
+    if ($opt{dsim_build}) {
+        $build_cmd  = "dsim " ;
+    }
     if ($opt{vcs_build}) {
       if ($ENV{VCS_BIN}) {
         $build_cmd = "$ENV{VCS_BIN} ";
@@ -1509,9 +1563,12 @@ sub generic_sim_build
 
       # the ariane files do not contain the timescale
       if ($opt{ariane}) {
-        $build_cmd .= " -timescale=1ps/1ps ";
+        if ($opt(dsim_build)) {
+           $build_cmd .= " -timescale 1ps/1ps ";
+        } else {
+           $build_cmd .= " -timescale=1ps/1ps ";
+        }
       }
-    }
     if ($opt{ncv_build}) {
       $build_cmd = "LD_LIBRARY_PATH=";
       $build_cmd .= $ld_lib_path;
@@ -1611,7 +1668,7 @@ sub generic_sim_build
 }
 
 ################################################################################
-# generic simulator run (incorporates vcs, ncv, icv, msm, vlt, other)
+# generic simulator run (incorporates dsim, vcs, ncv, icv, msm, vlt, other)
 ################################################################################
 
 sub generic_sim_run
@@ -1632,6 +1689,7 @@ sub generic_sim_run
     die ("DIE. could not copy flist to $ENV{PWD}") if ($?) ;
 
     # verify that a model was compiled
+    die ("DIE. dsim_work/ not found in $model_path") if ($opt{dsim_run} and ! -e "$model_path/dsim_work") ;
     die ("DIE. simv not found in $model_path") if ($opt{vcs_run} and ! -e "$model_path/simv") ;
     die ("DIE. INCA_libs not found in $model_path") if ($opt{ncv_run} and ! -e "$model_path/INCA_libs") ;
     die ("DIE. a.out not found in $model_path") if ($opt{icv_run} and ! -e "$model_path/a.out") ;
@@ -1731,6 +1789,10 @@ sub generic_sim_run
     push (@{$opt{sim_run_args}}, "+dv_root=$dv_root") ;
 
     # run the command
+    if ($opt{dsim_run}) {
+      $cmd .= join (" ", @{$opt{sim_run_args}}) ;
+    }
+
     if ($opt{vcs_run}) {
       $cmd .= "collect " if ($opt{vcs_prof}) ;
       $cmd .= "$model_path/simv " ;
@@ -1876,6 +1938,12 @@ if ($opt{riv_run}) {
     }
 
     print "$prg: LD_LIBRARY_PATH is $ENV{LD_LIBRARY_PATH}\n" if (!$opt{vcs_run}) ;
+
+    if ($opt{dsim_run}) {
+      # figure out the location of dsim from variable
+      if (!defined($ENV{DSIM_HOME})) { die ("DIE. DSIM_HOME not defined.") }
+      print "$prg: DSIM_HOME is $ENV{DSIM_HOME}\n";
+    }
 
     if ($opt{vcs_run}) {
       # figure out the location of vcs from variable
@@ -2631,8 +2699,11 @@ sub parse_args
             'use_config!',
             'vcd!',
             'vcdfile=s',
+            'dsim_build!',
+            'dsim_build_args=s@',
             'vcs_build!',
             'vcs_build_args=s@',
+            'dsim_run!',
             'clean!',
             'vcs_cm_args=s',
             'vcs_cm_cond=s',
@@ -2756,6 +2827,7 @@ sub parse_args
 
   # if -nobuild specified disable all build options
   if ($opt{build} == 0) {
+    $opt{dsim_build} = 0 ;
     $opt{vcs_build} = 0 ;
     $opt{ncv_build} = 0 ;
     $opt{icv_build} = 0 ;
@@ -2869,6 +2941,7 @@ sub parse_args
 
   #
   push (@{$opt{sim_run_args}}, "-gui") if ($opt{gui}) ;
+  push (@{$opt{dsim_build_args}}, "-trace-vpi") if ($opt{debug_all}) ;
   push (@{$opt{vcs_build_args}}, "-debug_all") if ($opt{debug_all}) ;
 
   # Push optional execution drafting enable
@@ -3031,8 +3104,8 @@ OPENPITON ARGUMENTS
 
 VERILOG COMPILATION RELATED
 
-    -sim_type=vcs/ncv/icv/msm/vlt/riv
-         defines which simulator to use vcs, ncverilog, icarus, modelsim, riviera, or verilator, defaults to vcs.
+    -sim_type=dsim/vcs/ncv/icv/msm/vlt/riv
+         defines which simulator to use dsim, vcs, ncverilog, icarus, modelsim, riviera, or verilator, defaults to dsim.
 
     -sim_q_command="command"
          defines which job queue manager command to use to launch jobs.
@@ -3072,6 +3145,9 @@ VERILOG COMPILATION RELATED
     -vlt_build_args=OPTION
            modelsim compile options. multiple options can be specified using
            multiple such arguments.
+
+    -dsim_build/-nodsim_build
+           builds a dsim model. defaults to off.
 
     -vcs_build/-novcs_build
            builds a vcs model. defaults to off.
@@ -3149,6 +3225,9 @@ VERILOG RUNTIME RELATED
            to force the file to be written in the current directory directly
            (not efficient since dumping is done over network instead of to
            a local disk).
+
+    -dsim_run/-nodsim_run
+           runs the dsim simulation (dsim). defaults to off.
 
     -vcs_run/-novcs_run
            runs the vcs simulation (simv). defaults to off.

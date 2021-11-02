@@ -30,7 +30,9 @@
 #include <stdio.h>
 #ifndef PITON_DPI
 #include "veriuser.h"
+#ifndef DSIM
 #include "acc_user.h"
+#endif // ifndef DSIM
 #endif // ifndef PITON_DPI
 //declare B-tree atom
 typedef struct b_tree_atom{

@@ -1,0 +1,73 @@
+Support Ariane RV64IMAC Core
+============================
+
+1. Install libbit-vector-perl library (done for eng-1 host):
+   for Debian-10, it is https://packages.debian.org/buster/libbit-vector-perl
+
+2. Set up the environment (this step is not needed if it was done previously):
+     cd <top of the repository>
+     export PITON_ROOT=$(pwd)
+     source $PITON_ROOT/piton/piton_settings.bash
+     cd $PITON_ROOT/build
+
+3. Build and install DSim using openpiton_bugs_20211025 branch (this step is
+   not needed if it was done previously):
+
+     a) find the path to install DSim to:
+          echo $DV_ROOT/tools/dsim
+          # clear the target path (workaround for #4718)
+          rm -r $DV_ROOT/tools/dsim
+
+     b) Switch to the working area with DSim repository to build/install DSim:
+          cd superp/source/dsim
+          scons debug=1 -j4 prefix=<the path found in the previous step a> install
+
+     c) Switch back to the working area with OpenPiton repository, and load
+        the installed DSim:
+          module use -a $DV_ROOT/tools/Modules
+          module load dsim-openpiton
+
+4. Set up the environment for Ariane (this step is not needed if it was done
+   previously):
+     cd $PITON_ROOT
+     source piton/ariane_setup.sh
+
+5. Prepare RISC-V toolchain, and the components needed for tests (this step is
+   not needed if it was done previously):
+
+   a) Build the RISC-V toolchain, and the components:
+        export ROOT=$PITON_ROOT
+        nice -n 19 ./piton/ariane_build_tools.sh
+
+      Note that it takes a while.  Once completed, verify the location of
+      riscv64-unknown-elf-gcc:
+        which riscv64-unknown-elf-gcc
+      The expected location is:
+        /scratch/user/$USER/tool/riscv_install/bin/riscv64-unknown-elf-gcc
+
+   b) WARNING
+        This step is needed only if the previous step (a) is unsuccessful:
+          module load riscv_tools/dev
+
+        Verify the location of riscv64-unknown-elf-gcc:
+          which riscv64-unknown-elf-gcc
+        The expected location is:
+          /tools/riscv_tools/dev/bin/riscv64-unknown-elf-gcc
+
+   c) Change the working directory:
+        cd $PITON_ROOT/build
+
+6.  Build PLI libraries locally (this step is not needed if it was done previously):
+      mkplilib clean
+      mkplilib dsim
+
+7. C Test
+
+   a) Build the model (this step is not needed if it was done previously):
+        export VCS_HOME=$DV_ROOT/tools
+        sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -vcs_build -ariane
+      It builds the model using DSim under the hood.
+
+   b) Execute the test
+        sims -sys=manycore -x_tiles=2 -y_tiles=2 -vcs_run -ariane hello_world_many.c -rtl_timeout 10000000
+      It runs the test using DSim under the hood.

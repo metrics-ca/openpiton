@@ -1,0 +1,65 @@
+Reproduction on Icarus
+======================
+
+1. Install libbit-vector-perl library:
+   for Debian-10, it is https://packages.debian.org/buster/libbit-vector-perl
+
+2. Set up the environment:
+     cd <top of the repository>
+     export PITON_ROOT=$(pwd)
+     export ICARUS_HOME=/usr
+     source $PITON_ROOT/piton/piton_settings.bash
+     cd $PITON_ROOT/build
+
+3. Recommendation
+   The following commands may consume CPU cycles for a long period of time.  In
+   order to minimize the impact on other users on the same host, assign least
+   favourable scheduling to the respective process by prefixing its command with:
+     nice -n 19 <command>
+
+4. Assembly Test
+
+   a) Build the model (not needed if done previously):
+        sims -sys=manycore -x_tiles=1 -y_tiles=1 -icv_build
+
+   b) Execute the test
+        sims -sys=manycore -x_tiles=1 -y_tiles=1 -icv_run -asm_diag_name=princeton-test-test.s
+
+   c) Expected result: success
+        27702500: Simulation -> PASS (HIT GOOD TRAP)
+   
+
+5. C Test
+
+   a) Build the model (not needed if done previously):
+        sims -sys=manycore -x_tiles=1 -y_tiles=1 -icv_build
+
+   b) Execute the test
+        sims -sys=manycore -x_tiles=1 -y_tiles=1 -icv_run factorial.s
+
+   c) Expected result: failure
+	midas: Compiling C code factorial.c to generate factorial.s
+	midas:  -m64 -fno-common -I. -I.. -I/scratch/project/dsim-openpiton/dshleifman/trunk/piton/verif/diag/c/include -O2 -S factorial.c -o factorial.s
+	midas: At pkg=Midas::Interface, file=/scratch/project/dsim-openpiton/dshleifman/trunk/piton/tools/perlmod/Midas/3.30/lib/site_perl/5.8.0/Midas/Interface.pm, line=370
+	midas: FATAL ERROR: M_CCFAIL (#17): C compiler failed.
+	midas: FATAL ERROR: Command " -m64 -fno-common -I. -I.. -I/scratch/project/dsim-openpiton/dshleifman/trunk/piton/verif/diag/c/include -O2 -S factorial.c -o factorial.s" died via signal 127. Dumped core.
+	sims: Caught a SIGDIE. midas compilation error at /scratch/project/dsim-openpiton/dshleifman/trunk/piton/tools/src/sims/sims,2.0 line 2329.
+
+6. Unit Test
+
+   a) Build the model (not needed if done previously).  This may take a while (47 min on eng-1):
+      sims -sys=ifu_esl_counter -x_tiles=1 -y_tiles=1 -clean -icv_build -icv_build_args='-I$DV_ROOT/verif/env/test_infrstrct/' takes 47min
+
+   b) Execute the test
+      sims -sys=ifu_esl_counter -x_tiles=1 -y_tiles=1 -icv_run -sim_run_args='+test_case=test_step'
+
+   c) Expected result: 2 errors
+        ERROR: /scratch/project/dsim-openpiton/dshleifman/trunk/piton/verif/env/ifu_esl_counter/ifu_esl_counter_top.v:154: $readmemb: Unable to open /scratch/project/dsim-openpiton/dshleifman/trunk/piton/verif/env/ifu_esl_counter/test_cases/test_step_src.vmh for reading.
+        ERROR: /scratch/project/dsim-openpiton/dshleifman/trunk/piton/verif/env/ifu_esl_counter/ifu_esl_counter_top.v:155: $readmemb: Unable to open /scratch/project/dsim-openpiton/dshleifman/trunk/piton/verif/env/ifu_esl_counter/test_cases/test_step_sink.vmh for reading.
+      in spite the fact that both files are present:
+        ll /scratch/project/dsim-openpiton/dshleifman/trunk/piton/verif/env/ifu_esl_counter/test_cases/test_step_src.vmh /scratch/project/dsim-openpiton/dshleifman/trunk/piton/verif/env/ifu_esl_counter/test_cases/test_step_sink.vmh
+        -rw-r----- 1 dshleifman metrics 2623182 Oct 18 09:38 /scratch/project/dsim-openpiton/dshleifman/trunk/piton/verif/env/ifu_esl_counter/test_cases/test_step_sink.vmh
+        -rw-r----- 1 dshleifman metrics  526043 Oct 18 09:38 /scratch/project/dsim-openpiton/dshleifman/trunk/piton/verif/env/ifu_esl_counter/test_cases/test_step_src.vmh
+      it is probably caused by the warnings:
+        WARNING: /scratch/project/dsim-openpiton/dshleifman/trunk/piton/verif/env/ifu_esl_counter/ifu_esl_counter_top.v:154: $readmemb: Standard inconsistency, following 1364-2005.
+        WARNING: /scratch/project/dsim-openpiton/dshleifman/trunk/piton/verif/env/ifu_esl_counter/ifu_esl_counter_top.v:155: $readmemb: Standard inconsistency, following 1364-2005.

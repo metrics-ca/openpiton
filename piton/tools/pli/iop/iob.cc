@@ -265,13 +265,25 @@ void iob::drive_cpx(int loc)
 int iob::drive_cpx()
 {
 #endif // ifndef PITON_DPI
-#ifdef USE_ACC
+#if defined USE_ACC
   s_setval_delay delay_s;
   s_setval_value value_s;
   handle tmphandle;
   delay_s.model = accNoDelay;
   char* outdata = new char[150];
   char* tmpdata = new char[33];
+#elif defined USE_VPI
+  char* outdata = new char[150];
+  char* tmpdata = new char[33];
+  vpiHandle argI, argH, systfH;
+  s_vpi_value val;
+  s_vpi_time tim;
+  int counter;
+
+  val.format = vpiHexStrVal;
+  tim.high = 0;
+  tim.low = 0;
+  tim.type = vpiSimTime;
 #endif
 
   if(!((pkt_vld == 0) && (next_cpx == 0))){//there is data to be sent.
@@ -298,7 +310,40 @@ int iob::drive_cpx()
     value_s.value.str = outdata;
     acc_set_value(tmphandle, &value_s, &delay_s);
 
-#else // ifdef USE_ACC
+#elif defined USE_VPI
+
+    sprintf(outdata,"%x", next_cpx ? (ptr[0] & 0x1ffff) : 0);
+    for(idx = 1; idx < 5;idx++) {
+	sprintf(tmpdata,"%0.8x", next_cpx ? ptr[idx] : 0);
+	strcat(outdata,tmpdata);
+    }
+
+   val.value.str = outdata;
+   systfH = vpi_handle(vpiSysTfCall,NULL);
+   if (!systfH) {
+      vpi_printf("Could not get handle to current system task.\n");
+      return;
+   }
+    
+   argI = vpi_iterate(vpiArgument,systfH);
+   if (!argI) {
+      vpi_printf("Could not get arguments to the current system task.\n");
+      return;
+   }
+
+   for (counter = 0; counter < loc; counter++) {
+      argH = vpi_scan(argI);
+      if (!argH) {
+         vpi_printf("Could not get fourth argument to system task %s.\n",vpi_get_str(vpiName, systfH));
+         return;
+      }
+   }
+   //vpi_printf("===> Putting value %s to %s\n", val.value.str, vpi_get_str(vpiFullName,argH));
+   vpi_put_value(argH, &val, &tim, vpiNoDelay);
+
+   //tf_dofinish();
+
+#else // use TF
     tf_nodeinfo(loc, &node_info);
     idx = 0;
     for(groups = node_info.node_ngroups -1 ; groups >= 0; groups--){
@@ -306,7 +351,7 @@ int iob::drive_cpx()
       node_info.node_value.vecval_p[groups].bvalbits = 0;
     }
     tf_propagatep(loc);
-#endif // ifdef USE_ACC
+#endif // use TF
 #endif // ifndef PITON_DPI
   }
 #ifdef PITON_DPI

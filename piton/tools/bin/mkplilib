@@ -67,6 +67,10 @@ case riviera:
     make rivierapli
     breaksw
 
+case dsim:
+    make dsimpli
+    breaksw
+
 case clean:
     make clean
     breaksw

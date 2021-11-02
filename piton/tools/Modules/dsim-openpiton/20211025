@@ -1,0 +1,12 @@
+#%Module1.0#####################################################################
+##
+## Modules modulefile
+## gwilliams@metrics.ca
+##
+
+regexp {.+/} $ModulesCurrentModulefile ModuleCurrentModuledir
+
+module load llvm
+
+source $ModuleCurrentModuledir/common
+

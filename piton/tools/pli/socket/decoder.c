@@ -22,7 +22,11 @@
 * ========== Copyright Header End ============================================
 */
 #include "veriuser.h"
+#ifndef DSIM
 #include "acc_user.h"
+#else
+#include "vpi_user.h"
+#endif
 #ifdef __ICARUS__
 #include "icarus-compat.h"
 #endif
@@ -52,7 +56,7 @@ void mra_entry()
    s_tfnodeinfo node_info, node_info4;
    char *avalPtr, *bvalPtr;
    int   groups, ind, i, num, aval[10], bval[10];
-#ifdef USE_ACC
+#if defined USE_ACC
    s_tfexprinfo expr_info4;
   s_setval_delay delay_s;
   s_setval_value value_s;
@@ -61,6 +65,18 @@ void mra_entry()
   char tmpdata[10];
   delay_s.model = accNoDelay;
   outdata[0] = '\0';
+#elif defined USE_VPI
+  char outdata[50];
+  char tmpdata[10];
+  vpiHandle argI, argH, systfH;
+  s_vpi_value val;
+  s_vpi_time tim;
+  int counter;
+
+  val.format = vpiHexStrVal;
+  tim.high = 0;
+  tim.low = 0;
+  tim.type = vpiSimTime;
 #endif
 
    tf_nodeinfo(3, &node_info);
@@ -78,7 +94,7 @@ void mra_entry()
        groups++;
      }
    }
-#ifdef USE_ACC
+#if defined USE_ACC
    for(ind = node_info4.node_ngroups-1; ind >= 0; ind--){
 	sprintf(tmpdata,"%0.8x",aval[ind] & 0xffffffff);
 	strcat(outdata,tmpdata);
@@ -88,6 +104,34 @@ void mra_entry()
     value_s.format = accHexStrVal;
     value_s.value.str = outdata;
     acc_set_value(tmphandle, &value_s, &delay_s);
+
+#elif defined USE_VPI
+
+   for(ind = node_info4.node_ngroups-1; ind >= 0; ind--){
+	sprintf(tmpdata,"%0.8x",aval[ind] & 0xffffffff);
+	strcat(outdata,tmpdata);
+   }
+   systfH = vpi_handle(vpiSysTfCall,NULL);
+   if (!systfH) {
+      vpi_printf("Could not get handle to current system task.\n");
+      return;
+   }
+    
+   argI = vpi_iterate(vpiArgument,systfH);
+   if (!argI) {
+      vpi_printf("Could not get arguments to the current system task.\n");
+      return;
+   }
+
+   for (counter = 1; counter < 4; counter++) {
+      argH = vpi_scan(argI);
+      if (!argH) {
+         vpi_printf("Could not get fourth argument to system task %s.\n",vpi_get_str(vpiName, systfH));
+         return;
+      }
+   }
+   vpi_put_value(argH, &val, &tim, vpiNoDelay);
+
 #else
    for(groups = 0; groups < node_info4.node_ngroups ; groups++){
       node_info4.node_value.vecval_p[groups].avalbits = aval[groups] & 0xffffffff;

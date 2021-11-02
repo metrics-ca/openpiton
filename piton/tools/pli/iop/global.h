@@ -25,7 +25,9 @@
 #define _G_GLOBAL_H_
 #ifndef PITON_DPI
 #include "veriuser.h"
+#ifndef DSIM
 #include "acc_user.h"
+#endif // ifndef DSIM
 #else
 #ifdef VERILATOR
 #include "verilated_vpi.h"

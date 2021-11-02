@@ -1,0 +1,43 @@
+##
+## Common Modules modulefile
+##
+## gwilliams@xtremee-eda.com
+##
+## Note that this file lacks the usual Magic cookie; it is not intended to be found by Modules, but rather
+## sourced by version specific modulefiles
+##
+## New tools version modules can easily be added by simply creating modulefiles that source this one.  If
+## any special processing is required, that could be done instead, but generally new versions should be
+## able to use the same basic configuration.
+##
+
+proc ModulesHelp { } {
+
+        global my_version
+
+        puts stdout "\tdsim - loads the DSim module"
+        puts stdout "\n\tVersion $my_version\n"
+}
+
+module-whatis "loads DSim module"
+
+
+# for Tcl script use only
+regexp {[^/]+$} $ModulesCurrentModulefile my_version
+
+conflict	dsim
+
+set		home		$env(DV_ROOT)/tools/dsim
+setenv		DSIM_HOME	$home
+setenv		UVM_HOME	$home/uvm-1.2
+setenv          OVM_HOME        $home/dsim/ovm-2.1.2
+setenv          VMM1_1_HOME     $home/dsim/vmm-1.1.1a
+setenv          VMM1_2_HOME     $home/dsim/vmm-1.2.2b
+setenv          AES_HOME        $home/dsim/random3rd/aesop
+setenv          SVAUNIT_HOME    $home/dsim/svaunit
+setenv          STD_LIBS        $home/std_pkgs/lib
+
+prepend-path	PATH		$home/bin
+prepend-path    PATH            $home/dsim/tests/bin
+prepend-path	LD_LIBRARY_PATH	$home/lib
+

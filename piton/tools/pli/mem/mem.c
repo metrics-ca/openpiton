@@ -34,7 +34,9 @@ vcs +mon0=cpu0:25 +mon1=ccx:10
 // #define J_DEBUG 1
 
 #include "veriuser.h"
+#ifndef DSIM
 #include "acc_user.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef __ICARUS__

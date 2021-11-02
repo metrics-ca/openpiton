@@ -68,6 +68,12 @@ LIB_A_RIVIERA=	$(TOOL_PLI_DIR)/mem/libmem_pli_riviera.a \
 		$(TOOL_PLI_DIR)/socket/libsocket_pli_riviera.a \
 		$(TOOL_PLI_DIR)/iop/libiob_riviera.a
 
+# dsim libraries
+
+LIB_A_DSIM=     $(TOOL_PLI_DIR)/mem/libmem_pli_dsim.a \
+		$(TOOL_PLI_DIR)/socket/libsocket_pli_dsim.a \
+		$(TOOL_PLI_DIR)/iop/libiob_dsim.a
+
 NCV_EXE = 	ncsim ncelab
 
 
@@ -91,6 +97,10 @@ modelsimpli: libmodelsimpli.so
 # Riviera targets 
 
 rivierapli: librivierapli.so
+
+# DSim targets
+
+dsimpli: libdsimpli.so
 
 # VCS .a libraries
 
@@ -176,6 +186,23 @@ $(TOOL_PLI_DIR)/iop/libiob_riviera.a:
 	(cd $(TOOL_PLI_DIR)/iop; make -f Makefile.riviera)
 	(rm -f $(LIB_PATH)/libiob_riviera.a)
 	cp $@ $(LIB_PATH)
+	
+# DSim .a libraries
+
+$(TOOL_PLI_DIR)/mem/libmem_pli_dsim.a:
+	(cd $(TOOL_PLI_DIR)/mem; make -f Makefile.dsim)
+	(rm -f $(LIB_PATH)/libmem_pli_dsim.a)
+	cp $@ $(LIB_PATH)
+
+$(TOOL_PLI_DIR)/socket/libsocket_pli_dsim.a:
+	(cd $(TOOL_PLI_DIR)/socket; make -f Makefile.dsim)
+	(rm -f $(LIB_PATH)/libsocket_pli_dsim.a)
+	cp $@ $(LIB_PATH)
+
+$(TOOL_PLI_DIR)/iop/libiob_dsim.a:
+	(cd $(TOOL_PLI_DIR)/iop; make -f Makefile.dsim)
+	(rm -f $(LIB_PATH)/libiob_dsim.a)
+	cp $@ $(LIB_PATH)
 
 clean:
 	make clean_vcs 
@@ -183,6 +210,7 @@ clean:
 	make clean_icarus
 	make clean_modelsim
 	make clean_riviera
+	make clean_dsim
 
 clean_vcs:
 	rm -rf $(LIB_A)
@@ -199,7 +227,10 @@ clean_modelsim:
 
 clean_riviera:
 	rm -rf $(LIB_A_RIVIERA)
-	
+
+clean_dsim:
+	rm -rf $(LIB_A_DSIM)
+
 ncelab: 
 	$(CCC) -o ncelab \
 	${NCV_HOME}/tools/inca/lib/64bit/ncelab.o \
@@ -266,7 +297,12 @@ veriuser_modelsim.o: veriuser.c
  veriuser_riviera.o: veriuser.c
 	$(CC) -fpic -c -DUSE_VPI -DRIVIERA -I${RIVIERA_HOME}/interfaces/include -o veriuser_riviera.o veriuser.c \
 	$(RIVIERA_CC_OPTS) 	
-	
+
+#DSim PLI support
+veriuser_dsim.o: veriuser.c
+	$(CC) -fpic -c -DUSE_VPI -I${DSIM_HOME}/include -o veriuser_dsim.o veriuser.c \
+	$(DSIM_CC_OPTS)
+
 veriuser.vpi: $(LIB_A_ICARUS) veriuser_icarus.o
 	$(CXX) -shared -o $@ veriuser_icarus.o \
 	-L$(ICARUS_HOME)/lib -lvpi \
@@ -299,3 +335,12 @@ librivierapli.so: $(LIB_A_RIVIERA) veriuser_riviera.o
 	cp $@ $(LIB_PATH)
 	(rm -f $@)
 	(rm -f veriuser_riviera.o)
+
+libdsimpli.so: $(LIB_A_DSIM) veriuser_dsim.o
+	$(CXX) -shared -o $@ veriuser_dsim.o \
+	$(LIB_A_DSIM) \
+	$(ADDITIONAL_ARGS)
+	(rm -f $(LIB_PATH)/$@)
+	cp $@ $(LIB_PATH)
+	(rm -f $@)
+	(rm -f veriuser_dsim.o)
