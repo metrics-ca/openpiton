@@ -58,7 +58,7 @@ Support Ariane RV64IMAC Core
         cd $PITON_ROOT/build
 
 6.  Build PLI libraries locally (this step is not needed if it was done previously):
-      mkplilib clean
+      mkplilib clean dsim
       mkplilib dsim
 
 7. C Test

@@ -22,8 +22,9 @@
 # ========== Copyright Header End ============================================
 
 if ($1 == "") then
-    echo "Usage: $0 vcs/ncverilog/icarus/modelsim/clean"
-    echo "e.g. : $0 vcs"
+    set myName=`basename $0`
+    echo "Usage: $0 vcs/ncverilog/icarus/modelsim/riviera/dsim/clean/clean SIMULATOR"
+    echo "e.g. : $myName clean vcs; $myName vcs"
     exit
 endif
 
@@ -72,7 +73,11 @@ case dsim:
     breaksw
 
 case clean:
-    make clean
+    if ($2 == "") then
+      make clean
+    else
+      make clean_$2
+    endif
     breaksw
 
 default:
