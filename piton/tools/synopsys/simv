@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+
+## fake simulation executable
+# version=$(date +%F.%H)
+myName=${0##*/};
+echo "[$myName] Arguments: $@"
+echo "[$myName] Current directory: $PWD"
+echo "[$myName] Passing control to sim_cmd (DSim run phase) along with the arguments"
+sim_cmd $@

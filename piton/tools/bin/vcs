@@ -1,0 +1,10 @@
+#! /usr/bin/env bash
+
+## Fake compiler
+# version=$(date +%F.%H)
+myName=${0##*/}
+echo "[$myName] Arguments: $@"
+echo "[$myName] Current directory: $PWD"
+cp --verbose $VCS_HOME/synopsys/simv .
+echo "[$myName] Passing control to comp_cmd (DSim compilation/elaboration phase)"
+comp_cmd

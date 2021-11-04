@@ -1,0 +1,7 @@
+#! /usr/bin/env bash
+
+## DSim run phase
+myName=${0##*/};
+echo -n "[$myName]"
+set -o xtrace
+dsim -image image -sv_lib $UVM_HOME/src/dpi/libuvm_dpi.so -pli_lib $DV_ROOT/tools/Linux/x86_64/lib/libdsimpli.so +acc+rwb $@
