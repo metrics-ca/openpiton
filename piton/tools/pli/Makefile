@@ -101,6 +101,7 @@ rivierapli: librivierapli.so
 # DSim targets
 
 dsimpli: libdsimpli.so
+dsimdpi: libdsimdpi.so
 
 # VCS .a libraries
 
@@ -230,6 +231,8 @@ clean_riviera:
 
 clean_dsim:
 	rm -rf $(LIB_A_DSIM)
+	rm -rf $(addprefix $(LIB_PATH)/, $(notdir $(LIB_A_DSIM)))
+	rm -rf $(addprefix $(LIB_PATH)/libdsim, pli.so dpi.so)
 
 ncelab: 
 	$(CCC) -o ncelab \
@@ -344,3 +347,12 @@ libdsimpli.so: $(LIB_A_DSIM) veriuser_dsim.o
 	cp $@ $(LIB_PATH)
 	(rm -f $@)
 	(rm -f veriuser_dsim.o)
+
+libdsimdpi.so: $(wildcard iop/*.c iop/*.cc)
+	$(CXX) -fPIC -DPITON_DPI -shared -o $@ \
+	$^ \
+	-Iiop \
+	-I$(DSIM_HOME)/include
+	(rm -f $(LIB_PATH)/$@)
+	cp $@ $(LIB_PATH)
+	(rm -f $@)
