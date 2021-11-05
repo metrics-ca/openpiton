@@ -72,6 +72,10 @@ case dsim:
     make dsimpli
     breaksw
 
+case dsim_dpi:
+    make dsimdpi
+    breaksw
+
 case clean:
     if ($2 == "") then
       make clean

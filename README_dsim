@@ -57,6 +57,10 @@ Support Ariane RV64IMAC Core
    c) Change the working directory:
         cd $PITON_ROOT/build
 
+
+VPI variant
+-----------
+
 6.  Build PLI libraries locally (this step is not needed if it was done previously):
       mkplilib clean dsim
       mkplilib dsim
@@ -70,4 +74,23 @@ Support Ariane RV64IMAC Core
 
    b) Execute the test
         sims -sys=manycore -x_tiles=2 -y_tiles=2 -vcs_run -ariane hello_world_many.c -rtl_timeout 10000000
+      It runs the test using DSim under the hood.
+
+
+DPI variant
+-----------
+
+6.  Build DPI libraries locally (this step is not needed if it was done previously):
+      mkplilib clean dsim
+      mkplilib dsim_dpi
+
+7. C Test
+
+   a) Build the model (this step is not needed if it was done previously):
+        export VCS_HOME=$DV_ROOT/tools
+        USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -vcs_build -ariane -config_rtl=PITON_DPI
+      It builds the model using DSim under the hood.
+
+   b) Execute the test
+        USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -vcs_run -ariane hello_world_many.c -rtl_timeout 10000000
       It runs the test using DSim under the hood.
