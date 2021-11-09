@@ -1551,6 +1551,9 @@ sub generic_sim_build
 
     if ($opt{dsim_build}) {
         $build_cmd  = "dsim " ;
+        if ($opt{ariane}) {
+            $build_cmd .= " -timescale 1ps/1ps ";
+        }
     }
     if ($opt{vcs_build}) {
       if ($ENV{VCS_BIN}) {
@@ -1563,12 +1566,9 @@ sub generic_sim_build
 
       # the ariane files do not contain the timescale
       if ($opt{ariane}) {
-        if ($opt(dsim_build)) {
-           $build_cmd .= " -timescale 1ps/1ps ";
-        } else {
-           $build_cmd .= " -timescale=1ps/1ps ";
-        }
+        $build_cmd .= " -timescale=1ps/1ps ";
       }
+    }
     if ($opt{ncv_build}) {
       $build_cmd = "LD_LIBRARY_PATH=";
       $build_cmd .= $ld_lib_path;
