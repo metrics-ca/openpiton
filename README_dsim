@@ -1,17 +1,33 @@
 Support Ariane RV64IMAC Core
 ============================
 
+Assuming all prerequisites have been completed, here is all you need to do to run the test:
+
+      cd <top of the repository>  # which is where you currently are reading this file
+      source ./setup.bash
+      cd ./build
+      mkplilib clean dsim
+
+      If you would prefer to run using VPI, do these steps:
+
+           mkplilib dsim
+           sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -dsim_build -ariane
+           sims -sys=manycore -x_tiles=2 -y_tiles=2 -dsim_run -ariane hello_world_many.c -rtl_timeout 10000000
+
+      If you would prefer to run using DPI, do these steps:
+
+           mkplilib dsim_dpi
+           USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -dsim_build -ariane -config_rtl=PITON_DPI
+           USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -dsim_run -ariane hello_world_many.c -rtl_timeout 10000000
+    
+
+Prerequisites
+=============
+
 1. Install libbit-vector-perl library (done for eng-1 host):
    for Debian-10, it is https://packages.debian.org/buster/libbit-vector-perl
 
-2. Set up the environment (this step is not needed if it was done previously):
-     cd <top of the repository>
-     export PITON_ROOT=$(pwd)
-     source $PITON_ROOT/piton/piton_settings.bash
-     cd $PITON_ROOT/build
-
-3. Build and install DSim using openpiton_bugs_20211025 branch (this step is
-   not needed if it was done previously):
+2. Build and install DSim using the openpiton_bugs_20211025 branch:
 
      a) find the path to install DSim to:
           echo $DV_ROOT/tools/dsim
@@ -27,19 +43,13 @@ Support Ariane RV64IMAC Core
           module use -a $DV_ROOT/tools/Modules
           module load dsim-openpiton
 
-4. Set up the environment for Ariane (this step is not needed if it was done
-   previously):
-     cd $PITON_ROOT
-     source piton/ariane_setup.sh
-
-5. Prepare RISC-V toolchain, and the components needed for tests (this step is
-   not needed if it was done previously):
+3. Prepare RISC-V toolchain, and the components needed for tests:
 
    a) Build the RISC-V toolchain, and the components:
         export ROOT=$PITON_ROOT
-        nice -n 19 ./piton/ariane_build_tools.sh
+        ./piton/ariane_build_tools.sh
 
-      Note that it takes a while.  Once completed, verify the location of
+      Note that this will take a while.  Once completed, verify the location of
       riscv64-unknown-elf-gcc:
         which riscv64-unknown-elf-gcc
       The expected location is:
@@ -53,44 +63,3 @@ Support Ariane RV64IMAC Core
           which riscv64-unknown-elf-gcc
         The expected location is:
           /tools/riscv_tools/dev/bin/riscv64-unknown-elf-gcc
-
-   c) Change the working directory:
-        cd $PITON_ROOT/build
-
-
-VPI variant
------------
-
-6.  Build PLI libraries locally (this step is not needed if it was done previously):
-      mkplilib clean dsim
-      mkplilib dsim
-
-7. C Test
-
-   a) Build the model (this step is not needed if it was done previously):
-        export VCS_HOME=$DV_ROOT/tools
-        sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -vcs_build -ariane
-      It builds the model using DSim under the hood.
-
-   b) Execute the test
-        sims -sys=manycore -x_tiles=2 -y_tiles=2 -vcs_run -ariane hello_world_many.c -rtl_timeout 10000000
-      It runs the test using DSim under the hood.
-
-
-DPI variant
------------
-
-6.  Build DPI libraries locally (this step is not needed if it was done previously):
-      mkplilib clean dsim
-      mkplilib dsim_dpi
-
-7. C Test
-
-   a) Build the model (this step is not needed if it was done previously):
-        export VCS_HOME=$DV_ROOT/tools
-        USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -vcs_build -ariane -config_rtl=PITON_DPI
-      It builds the model using DSim under the hood.
-
-   b) Execute the test
-        USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -vcs_run -ariane hello_world_many.c -rtl_timeout 10000000
-      It runs the test using DSim under the hood.
