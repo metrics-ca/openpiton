@@ -1357,40 +1357,49 @@ sub generic_sim_build
 
 
     if ($opt{dsim_build}) {
+      push (@{$opt{sim_build_args}}, "-work dsim_work") ;
+
+      # the ariane files do not contain the timescale
+      if ($opt{ariane}) {
+          push (@{$opt{dsim_build_args}}, "-timescale 1ps/1ps") ;
+          push (@{$opt{dsim_build_args}}, "+incdir+$ENV{UVM_HOME}/src") ;
+          push (@{$opt{dsim_build_args}}, "$ENV{UVM_HOME}/src/uvm_pkg.sv") ;
+      }
+
+      push (@{$opt{dsim_build_args}}, "-f flist") ;
+
+      #PLI option
+      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/piton/tools/Linux/x86_64/lib/libdsimpli.so");
+      #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libiob_ncv.so");
+      #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libjbus_mon_ncv.so");
+      #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libmem_pli_ncv.so");
+      #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libmonitor_ncv.so");
+      #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libsjm_ncv.so");
+      #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libsocket_pli_ncv.so");
+      #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libjpcommon_ncv.so");
+      #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libmem_pli_ncv.so");
+      #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libutility_ncv:utility_boot");
+      
+      #push (@{$opt{dsim_build_args}}, "+define+PITON_DPI");
+      #push (@{$opt{dsim_build_args}}, "-sv_lib $ENV{UVM_HOME}/src/dpi/libuvm_dpi.so");
+      
+      push (@{$opt{dsim_build_args}}, "+acc+rwb");
+      push (@{$opt{dsim_build_args}}, "+nospecify");
+
       foreach my $top_n (@{$opt{toplevel}}) {
         push(@{$opt{dsim_build_args}}, "-top $top_n") ;
       }
-      push (@{$opt{dsim_build_args}}, "+acc+rwb");
+
       push (@{$opt{dsim_build_args}}, "-linebuf");
       push (@{$opt{dsim_build_args}}, "-l compile.log") ;
+      push (@{$opt{dsim_build_args}}, "-genimage image") ;
 
-      # some SystemVerilog-specific options
-      if ($opt{ariane}) {
-          push (@{$opt{dsim_build_args}}, "-sv") ;
-          #push (@{$opt{dsim_build_args}}, "-sysvlog-ext .sv -vlog_sv2012") ;
-          push (@{$opt{dsim_build_args}}, "+incdir+$ENV{UVM_HOME}/src $ENV{UVM_HOME}/src/uvm_pkg.sv") ;
-      }
-
-      push (@{$opt{sim_build_args}}, "-f flist") ;
-
-      #PLI option
-      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libiob_ncv.so");
-      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libjbus_mon_ncv.so");
-      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libmem_pli_ncv.so");
-      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libmonitor_ncv.so");
-      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libsjm_ncv.so");
-      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libsocket_pli_ncv.so");
-      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libjpcommon_ncv.so");
-      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libmem_pli_ncv.so");
-      #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libutility_ncv:utility_boot");
-      
-      push (@{$opt{dsim_build_args}}, "+define+PITON_DPI");
+      push (@{$opt{dsim_build_args}}, "-sv") ;
       push (@{$opt{dsim_build_args}}, "-allow-int-enum-assign");
       push (@{$opt{dsim_build_args}}, "-warn DefNetNone");
+      push (@{$opt{dsim_build_args}}, "+define+UVM_DIRECTC_OPTS");
 
-      # Run time argument. Hack.
-      push (@{$opt{dsim_build_args}}, "-sv_lib $ENV{UVM_HOME}/src/dpi/libuvm_dpi.so");
-
+      #exit (0);
     }
 
 
@@ -1496,8 +1505,10 @@ sub generic_sim_build
     if ($opt{dsim_build}) {
       foreach my $x (@{$opt{dsim_build_args}})
       {
+          #print "$x\n" ;
           push (@{$opt{sim_build_args}}, $x);
       }
+      #exit (0) ;
     }
     if ($opt{vcs_build}) {
       foreach my $x (@{$opt{vcs_build_args}})
@@ -1551,9 +1562,6 @@ sub generic_sim_build
 
     if ($opt{dsim_build}) {
         $build_cmd  = "dsim " ;
-        if ($opt{ariane}) {
-            $build_cmd .= " -timescale 1ps/1ps ";
-        }
     }
     if ($opt{vcs_build}) {
       if ($ENV{VCS_BIN}) {
@@ -1628,11 +1636,12 @@ sub generic_sim_build
     open (IFLIST, "> flist.new") or die ("DIE. can't open flist.new") ;
     foreach my $x (@{$opt{sim_build_args}}) {
       $x =~ s/^"(.*?)"$/$1/ ;
-      if ($x =~ /\+define+|^-v |^-y |^-f (?!(flist|.*0in.*?\.arg))/) {
-        print IFLIST "$x\n";
-      } else {
+# Following is erroneously removing +define+UVM_DIRECTC_OPTS so commenting out for now
+    #  if ($x =~ /\+define+|^-v |^-y |^-f (?!(flist|.*0in.*?\.arg))/) {
+    #    print IFLIST "$x\n";
+    #  } else {
         $build_cmd .= "$x " ;
-      }
+    #  }
     }
 
     # Append flist to flist.new and rename to flist.
