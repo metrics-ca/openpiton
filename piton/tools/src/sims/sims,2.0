@@ -1636,12 +1636,11 @@ sub generic_sim_build
     open (IFLIST, "> flist.new") or die ("DIE. can't open flist.new") ;
     foreach my $x (@{$opt{sim_build_args}}) {
       $x =~ s/^"(.*?)"$/$1/ ;
-# Following is erroneously removing +define+UVM_DIRECTC_OPTS so commenting out for now
-    #  if ($x =~ /\+define+|^-v |^-y |^-f (?!(flist|.*0in.*?\.arg))/) {
-    #    print IFLIST "$x\n";
-    #  } else {
+      if ($x =~ /\+define\+|^-v |^-y |^-f (?!(flist|.*0in.*?\.arg))/) {
+        print IFLIST "$x\n";
+      } else {
         $build_cmd .= "$x " ;
-    #  }
+      }
     }
 
     # Append flist to flist.new and rename to flist.
