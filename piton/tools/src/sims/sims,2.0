@@ -536,7 +536,7 @@ else { $model_path = "$model_dir/$opt{model}/$opt{build_id}" ; }
 
 &copy_image () if ($opt{image_diag_name} ne "") ;
 
-&oram_image () if (($opt{vcs_run} or $opt{ncv_run} or
+&oram_image () if (($opt{dsim_run} or $opt{vcs_run} or $opt{ncv_run} or
                     $opt{icv_run} or $opt{other_sim_run} or
                     $opt{msm_run} or $opt{vlt_run} or $opt{riv_run}) and
                     $opt{oram}); #if ($opt{image_diag_name}
@@ -545,7 +545,7 @@ else { $model_path = "$model_dir/$opt{model}/$opt{build_id}" ; }
 # launch simulator
 ################################################################################
 
-&generic_sim_run () if ($opt{vcs_run} or $opt{ncv_run} or
+&generic_sim_run () if ($opt{dsim_run} or $opt{vcs_run} or $opt{ncv_run} or
                         $opt{icv_run} or $opt{other_sim_run} or
                         $opt{msm_run} or $opt{vlt_run} or $opt{riv_run}) ;
 
@@ -554,7 +554,7 @@ else { $model_path = "$model_dir/$opt{model}/$opt{build_id}" ; }
 ################################################################################
 
 if (    -e "diag.pl" and
-  ( $opt{vcs_run} or $opt{ncv_run} or
+  ( $opt{dsim_run} or $opt{vcs_run} or $opt{ncv_run} or
       $opt{icv_run} or $opt{other_sim_run} or
       $opt{msm_run} or $opt{vlt_run} or $opt{riv_run}) and
        $opt{run_diag_pl} )
@@ -1314,7 +1314,7 @@ sub generic_sim_build
     my $ld_lib_path = "";
 
     # go to the model area
-    chdir $model_path or die ("DIE. Can't cd to $model_path") ;
+    #chdir $model_path or die ("DIE. Can't cd to $model_path") ;
 
 # I suspect a bug here:  This if includes more than just vcs and ncv stuff
     if ($opt{vcs_build} or $opt{ncv_build}) {
@@ -1798,6 +1798,12 @@ sub generic_sim_run
 
     # run the command
     if ($opt{dsim_run}) {
+      $cmd = "dsim ";
+      push (@{$opt{sim_run_args}}, "-image image");
+      push (@{$opt{sim_run_args}}, "-sv_lib $ENV{UVM_HOME}/src/dpi/libuvm_dpi.so");
+      push (@{$opt{sim_run_args}}, "-pli_lib $ENV{PITON_ROOT}/piton/tools/Linux/x86_64/lib/libdsimpli.so");
+      push (@{$opt{sim_run_args}}, "+acc+rwb");
+      #push (@{$opt{sim_run_args}}, "trace-vpi");
       $cmd .= join (" ", @{$opt{sim_run_args}}) ;
     }
 
