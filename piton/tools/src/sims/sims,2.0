@@ -1516,10 +1516,8 @@ sub generic_sim_build
     if ($opt{dsim_build}) {
       foreach my $x (@{$opt{dsim_build_args}})
       {
-          #print "$x\n" ;
           push (@{$opt{sim_build_args}}, $x);
       }
-      #exit (0) ;
     }
     if ($opt{vcs_build}) {
       foreach my $x (@{$opt{vcs_build_args}})
@@ -2739,9 +2737,9 @@ sub parse_args
             'vcdfile=s',
             'dsim_build!',
             'dsim_build_args=s@',
+            'dsim_run!',
             'vcs_build!',
             'vcs_build_args=s@',
-            'dsim_run!',
             'clean!',
             'vcs_cm_args=s',
             'vcs_cm_cond=s',
@@ -3187,6 +3185,10 @@ VERILOG COMPILATION RELATED
     -dsim_build/-nodsim_build
            builds a dsim model. defaults to off.
 
+    -dsim_build_args=OPTION
+           dsim compile options. multiple options can be specified using
+           multiple such arguments.
+
     -vcs_build/-novcs_build
            builds a vcs model. defaults to off.
 
@@ -3265,10 +3267,10 @@ VERILOG RUNTIME RELATED
            a local disk).
 
     -dsim_run/-nodsim_run
-           runs the dsim simulation (dsim). defaults to off.
+           runs the dsim simulation (dsim). Defaults to off.
 
     -vcs_run/-novcs_run
-           runs the vcs simulation (simv). defaults to off.
+           runs the vcs simulation (simv). Defaults to off.
 
     -sim_run_args=OPTION
            sim runtime options. multiple options can be specified
@@ -3558,6 +3560,10 @@ Build models
 Build a vcs model using DV_ROOT as design root
 
   sims -sys=manycore -x_tiles=1 -y_tiles=1 -vcs_build
+
+Build a dsim model using DV_ROOT as design root
+
+  sims -sys=manycore -x_tiles=1 -y_tiles=1 -dsim_build
 
 Build a ncverilog model using DV_ROOT as design root
 
