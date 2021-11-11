@@ -1394,7 +1394,9 @@ sub generic_sim_build
       #push (@{$opt{dsim_build_args}}, "+define+PITON_DPI");
       #push (@{$opt{dsim_build_args}}, "-sv_lib $ENV{UVM_HOME}/src/dpi/libuvm_dpi.so");
       
-      push (@{$opt{dsim_build_args}}, "+acc+rwb");
+      if (!$ENV{USE_DPI}) {
+        push (@{$opt{dsim_build_args}}, "+acc+rwb");
+      }
       push (@{$opt{dsim_build_args}}, "+nospecify");
 
       foreach my $top_n (@{$opt{toplevel}}) {
@@ -1409,8 +1411,6 @@ sub generic_sim_build
       push (@{$opt{dsim_build_args}}, "-allow-int-enum-assign");
       push (@{$opt{dsim_build_args}}, "-warn DefNetNone");
       push (@{$opt{dsim_build_args}}, "+define+UVM_DIRECTC_OPTS");
-
-      #exit (0);
     }
 
 
@@ -1824,7 +1824,9 @@ sub generic_sim_run
       }
       $mystr .= $mypth;
       push (@{$opt{sim_run_args}}, $mystr);
-      push (@{$opt{sim_run_args}}, "+acc+rwb");
+      if (!$ENV{USE_DPI}) {
+        push (@{$opt{sim_run_args}}, "+acc+rwb");
+      }
       #push (@{$opt{sim_run_args}}, "trace-vpi");  # Uncomment this out if you want to see PLI trace info
       $cmd .= join (" ", @{$opt{sim_run_args}}) ;
     }
