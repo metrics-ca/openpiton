@@ -1369,7 +1369,9 @@ sub generic_sim_build
       push (@{$opt{dsim_build_args}}, "-f flist") ;
 
       #PLI option
-      push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/piton/tools/Linux/x86_64/lib/libdsimpli.so");
+      if (!$ENV{USE_DPI}) {
+        push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/piton/tools/Linux/x86_64/lib/libdsimpli.so");
+      }
       #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libiob_ncv.so");
       #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libjbus_mon_ncv.so");
       #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libmem_pli_ncv.so");
@@ -1801,7 +1803,9 @@ sub generic_sim_run
       $cmd = "dsim ";
       push (@{$opt{sim_run_args}}, "-image image");
       push (@{$opt{sim_run_args}}, "-sv_lib $ENV{UVM_HOME}/src/dpi/libuvm_dpi.so");
-      push (@{$opt{sim_run_args}}, "-pli_lib $ENV{PITON_ROOT}/piton/tools/Linux/x86_64/lib/libdsimpli.so");
+      if (!$ENV{USE_DPI}) {
+        push (@{$opt{sim_run_args}}, "-pli_lib $ENV{PITON_ROOT}/piton/tools/Linux/x86_64/lib/libdsimpli.so");
+      }
       push (@{$opt{sim_run_args}}, "+acc+rwb");
       #push (@{$opt{sim_run_args}}, "trace-vpi");
       $cmd .= join (" ", @{$opt{sim_run_args}}) ;
