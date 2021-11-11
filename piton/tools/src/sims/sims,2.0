@@ -1314,7 +1314,7 @@ sub generic_sim_build
     my $ld_lib_path = "";
 
     # go to the model area
-    #chdir $model_path or die ("DIE. Can't cd to $model_path") ;
+    chdir $model_path or die ("DIE. Can't cd to $model_path") ;
 
 # I suspect a bug here:  This if includes more than just vcs and ncv stuff
     if ($opt{vcs_build} or $opt{ncv_build}) {
@@ -1355,9 +1355,12 @@ sub generic_sim_build
       print "$prg: LM_LICENSE_FILE : none\n";
     }
 
-
     if ($opt{dsim_build}) {
-      push (@{$opt{sim_build_args}}, "-work dsim_work") ;
+      my $mystr = "";
+      my $mypth = "$ENV{PITON_ROOT}/piton/tools/";
+      $mypth .= $os_cpu_slash;
+
+      push (@{$opt{dsim_build_args}}, "-work $model_dir/dsim_work") ;
 
       # the ariane files do not contain the timescale
       if ($opt{ariane}) {
@@ -1370,8 +1373,14 @@ sub generic_sim_build
 
       #PLI option
       if (!$ENV{USE_DPI}) {
-        push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/piton/tools/Linux/x86_64/lib/libdsimpli.so");
+        $mystr .= "-pli_lib ";
+        $mypth .= "/lib/libdsimpli.so";
+      } else {
+        $mystr .= "-sv_lib ";
+        $mypth .= "/lib/libdsimdpi.so";
       }
+      $mystr .= $mypth;
+      push (@{$opt{dsim_build_args}}, $mystr);
       #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libiob_ncv.so");
       #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libjbus_mon_ncv.so");
       #push (@{$opt{dsim_build_args}}, "-pli_lib $ENV{PITON_ROOT}/lib/libmem_pli_ncv.so");
@@ -1800,14 +1809,25 @@ sub generic_sim_run
 
     # run the command
     if ($opt{dsim_run}) {
+      my $mystr = "";
+      my $mypth = "$ENV{PITON_ROOT}/piton/tools/";
+      $mypth .= $os_cpu_slash;
+
       $cmd = "dsim ";
+      push (@{$opt{sim_run_args}}, "-work $model_dir/dsim_work") ;
       push (@{$opt{sim_run_args}}, "-image image");
       push (@{$opt{sim_run_args}}, "-sv_lib $ENV{UVM_HOME}/src/dpi/libuvm_dpi.so");
       if (!$ENV{USE_DPI}) {
-        push (@{$opt{sim_run_args}}, "-pli_lib $ENV{PITON_ROOT}/piton/tools/Linux/x86_64/lib/libdsimpli.so");
+        $mystr .= "-pli_lib ";
+        $mypth .= "/lib/libdsimpli.so";
+      } else {
+        $mystr .= "-sv_lib ";
+        $mypth .= "/lib/libdsimdpi.so";
       }
+      $mystr .= $mypth;
+      push (@{$opt{sim_run_args}}, $mystr);
       push (@{$opt{sim_run_args}}, "+acc+rwb");
-      #push (@{$opt{sim_run_args}}, "trace-vpi");
+      #push (@{$opt{sim_run_args}}, "trace-vpi");  # Uncomment this out if you want to see PLI trace info
       $cmd .= join (" ", @{$opt{sim_run_args}}) ;
     }
 
