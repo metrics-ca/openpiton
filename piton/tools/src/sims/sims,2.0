@@ -1376,8 +1376,8 @@ sub generic_sim_build
         $mystr .= "-pli_lib ";
         $mypth .= "/lib/libdsimpli.so";
       } else {
-        $mystr .= "-sv_lib ";
-        $mypth .= "/lib/libdsimdpi.so";
+        $mystr = "";
+        $mypth = "";
       }
       $mystr .= $mypth;
       push (@{$opt{dsim_build_args}}, $mystr);
@@ -1706,7 +1706,7 @@ sub generic_sim_run
     die ("DIE. could not copy flist to $ENV{PWD}") if ($?) ;
 
     # verify that a model was compiled
-    die ("DIE. dsim_work/ not found in $model_path") if ($opt{dsim_run} and ! -e "$model_path/dsim_work") ;
+    die ("DIE. dsim_work/ not found in $model_path") if ($opt{dsim_run} and ! -e "$model_dir/dsim_work") ;
     die ("DIE. simv not found in $model_path") if ($opt{vcs_run} and ! -e "$model_path/simv") ;
     die ("DIE. INCA_libs not found in $model_path") if ($opt{ncv_run} and ! -e "$model_path/INCA_libs") ;
     die ("DIE. a.out not found in $model_path") if ($opt{icv_run} and ! -e "$model_path/a.out") ;
@@ -2999,7 +2999,7 @@ sub parse_args
   push (@{$opt{config_rtl}}, "ORAM_ON") if ($opt{oram}) ;
   push (@{$opt{sim_run_args}}, "+oram") if ($opt{oram}) ;
 
-  if ($opt{vcs_build} or $opt{ncv_build} or $opt{riv_build}) {
+  if ($opt{dsim_build} or $opt{vcs_build} or $opt{ncv_build} or $opt{riv_build}) {
       push(@{$opt{config_rtl}}, "OST1_PLI_SLAM_RANDOM") ;
       push(@{$opt{config_rtl}}, "OST1_PLI_MRA_VAL") ;
   }
