@@ -137,7 +137,11 @@ always @ * chipset_clk_osc_n = ~chipset_clk_osc_p;
 
 always #5000 chipset_clk_osc = ~chipset_clk_osc;                // 100MHz
 
+`ifndef SYNC_MUX
 always #2500 chipset_clk = ~chipset_clk;                        // 200MHz
+`else
+always @ * chipset_clk = core_ref_clk;
+`endif
 
 always #3333 passthru_clk_osc_p = ~passthru_clk_osc_p;          // 150MHz
 always @ * passthru_clk_osc_n = ~passthru_clk_osc_p;
