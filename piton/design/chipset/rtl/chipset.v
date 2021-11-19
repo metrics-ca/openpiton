@@ -693,6 +693,7 @@ end
 
 `ifndef PITON_BOARD
     `ifndef PITONSYS_INC_PASSTHRU
+        wire                     io_clk;
         assign io_clk_loopback = io_clk;
     `endif
 
