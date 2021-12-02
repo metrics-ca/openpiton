@@ -27,23 +27,7 @@ Prerequisites
 1. Install libbit-vector-perl library (done for eng-1 host):
    for Debian-10, it is https://packages.debian.org/buster/libbit-vector-perl
 
-2. Build and install DSim using the openpiton_bugs_20211025 branch:
-
-     a) find the path to install DSim to:
-          echo $DV_ROOT/tools/dsim
-          # clear the target path (workaround for #4718)
-          rm -r $DV_ROOT/tools/dsim
-
-     b) Switch to the working area with DSim repository to build/install DSim:
-          cd superp/source/dsim
-          scons debug=1 -j4 prefix=<the path found in the previous step a> install
-
-     c) Switch back to the working area with OpenPiton repository, and load
-        the installed DSim:
-          module use -a $DV_ROOT/tools/Modules
-          module load dsim-openpiton
-
-3. Prepare RISC-V toolchain, and the components needed for tests:
+2. Prepare RISC-V toolchain, and the components needed for tests:
 
    a) Build the RISC-V toolchain, and the components:
         export ROOT=$PITON_ROOT
