@@ -25,6 +25,12 @@
 #include <stdio.h>
 #include <ctype.h>
 #include "veriuser.h"
+
+#ifdef DSIM
+#include "vxl_veriuser.h"
+#include "vpi_user.h"
+#endif
+
 #ifndef USE_VPI
 #include "vxl_veriuser.h"
 #else
@@ -88,7 +94,7 @@ static void veriusertfs_register(void)
 
 void (*vlog_startup_routines[])() = { &veriusertfs_register, 0 };
 #else
-#ifdef MODELSIM
+#if defined (MODELSIM) || defined (DSIM)
 static void veriusertfs_register(void)
 {
     s_vpi_systf_data task_data_s;
