@@ -16,8 +16,8 @@ Assuming all prerequisites have been completed, here is all you need to do to ru
            -- this is a work around for fibery bug 43
 
            mkplilib dsim_dpi
-           USE_DPI=1 sims -sys=manycore -x_tiles=1 -y_tiles=1 -clean -dsim_build -ariane -config_rtl=PITON_DPI -config_rtl=PITON_NO_CHIP_BRIDGE -config_rtl=SYNC_MUX -dsim_build_args="+acc -opt-comb-glitch"
-           USE_DPI=1 sims -sys=manycore -x_tiles=1 -y_tiles=1 -dsim_run -ariane hello_world_many.c -rtl_timeout 50000 -sim_run_args=+acc
+           USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -dsim_build -ariane -config_rtl=PITON_DPI -config_rtl=PITON_NO_CHIP_BRIDGE -config_rtl=SYNC_MUX -dsim_build_args="+acc -opt-comb-glitch"
+           USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -dsim_run -ariane hello_world_many.c -rtl_timeout 50000 -sim_run_args=+acc
            -- expect a pass "42895500: Simulation -> PASS (HIT GOOD TRAP)"
            -- these are the approx runtimes for the various tests
             accu_test.c 1m52 
