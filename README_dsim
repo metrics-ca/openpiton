@@ -2,45 +2,46 @@ Support Ariane RV64IMAC Core
 ============================
 
 Assuming all prerequisites have been completed, here is all you need to do to run the test:
-      
-      clone the repository and then run `git submodule update --init --recursive`
-      -- note the act of running will modify some files in submodules, don't be alarmed when `git status` returns
-      -- modified files.
+
       cd <top of the repository>  # which is where you currently are reading this file
       source ./setup.bash
       cd ./build
       mkplilib clean dsim
 
-      To run the reduced test case which passes for demo purposes:
-           cp fix_for_glitch/wt_dcache_wbuffer.sv piton/design/chip/tile/ariane/src/cache_subsystem/wt_dcache_wbuffer.sv
-           -- this is a work around for fibery bug 43
-
+      - If you would prefer to run a test case for demo purposes (where the test is a bit
+        downsized to pass), do these steps:
            mkplilib dsim_dpi
            USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -dsim_build -ariane -config_rtl=PITON_DPI -config_rtl=PITON_NO_CHIP_BRIDGE -config_rtl=SYNC_MUX -dsim_build_args="+acc -opt-comb-glitch"
-           USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -dsim_run -ariane hello_world_many.c -rtl_timeout 50000 -sim_run_args=+acc
-           -- expect a pass "42895500: Simulation -> PASS (HIT GOOD TRAP)"
-           -- these are the approx runtimes for the various tests
-            accu_test.c 1m52 
-            add_shared_var.c  16s 
-            amo_align.c 21s
-            clint_plic_access.c 15s 
-            hello_world.c 45s 
-            hello_world_many.c  30s
-            lrsc_single.c  7s 
-            lrsc_test.c 8s
+           USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -dsim_run -ariane hello_world_many.c -rtl_timeout 100000 -sim_run_args="+acc"
 
-      If you would prefer to run using VPI, do these steps:
+        Results:
+          Expect a pass:
+            grep -F "GOOD TRAP" sim.log
+            69553500: Simulation -> PASS (HIT GOOD TRAP)
+
+          Here are the approx. run-times for the various tests, where Ariane tile
+          configuration is 1x1:
+            accu_test.c       1m52s
+            add_shared_var.c    16s
+            amo_align.c         21s
+            clint_plic_access.c 15s
+            hello_world.c       45s
+            hello_world_many.c  30s
+            lrsc_single.c        7s
+            lrsc_test.c          8s
+
+      - If you would prefer to run using VPI, do these steps:
 
            mkplilib dsim
            sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -dsim_build -ariane
            sims -sys=manycore -x_tiles=2 -y_tiles=2 -dsim_run -ariane hello_world_many.c -rtl_timeout 10000000
 
-      If you would prefer to run using DPI, do these steps:
+      - If you would prefer to run using DPI, do these steps:
 
            mkplilib dsim_dpi
            USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -dsim_build -ariane -config_rtl=PITON_DPI
            USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -dsim_run -ariane hello_world_many.c -rtl_timeout 10000000
-    
+
 
 Prerequisites
 =============
@@ -48,7 +49,48 @@ Prerequisites
 1. Install libbit-vector-perl library (done for eng-1 host):
    for Debian-10, it is https://packages.debian.org/buster/libbit-vector-perl
 
-2. Prepare RISC-V toolchain, and the components needed for tests:
+2. Clone project
+
+   a) Clone superproject, and navigate to its top-level directory:
+        git clone -b op-dev-metrics-new-flow_demo git@github.com:metrics-ca/openpiton.git
+        cd openpiton
+
+      Note that from this point forward, your current working directory is assumed
+      to be at the top of the repository.
+
+   b) Populate submodule directories
+      By default, `git clone ...` doesn't populate directories that contain
+      submodules.  You need to instruct git to do so:
+        git submodule update --init --recursive
+
+      Note that this will take a while.  Once completed, verify the working tree
+      status:
+        git status
+
+      The expected status is:
+        On branch op-dev-metrics-new-flow_demo
+        Your branch is up to date with 'origin/op-dev-metrics-new-flow_demo'.
+
+        nothing to commit, working tree clean
+
+      If the status contains anything else, e.g.:
+        Changes not staged for commit:
+          . . .
+          (commit or discard the untracked or modified content in submodules)
+                modified:   piton/design/chip/tile/ariane (modified content)
+
+      , then there is something wrong with your working tree.
+
+      Note that the act of running a test will modify some files in submodules.
+      After you run a test (at least once), don't get alarmed upon seeing that
+      `git status` indicates modified files.
+
+3. Apply workaround
+   There is a temporary workaround for Fibery bug-43.  You need to apply it to
+   the design:
+     cp fix_for_glitch/wt_dcache_wbuffer.sv piton/design/chip/tile/ariane/src/cache_subsystem/wt_dcache_wbuffer.sv
+
+4. Prepare RISC-V toolchain, and the components needed for tests:
 
    a) Build the RISC-V toolchain, and the components:
         export ROOT=$PITON_ROOT
@@ -57,6 +99,7 @@ Prerequisites
       Note that this will take a while.  Once completed, verify the location of
       riscv64-unknown-elf-gcc:
         which riscv64-unknown-elf-gcc
+
       The expected location is:
         /scratch/user/$USER/tool/riscv_install/bin/riscv64-unknown-elf-gcc
 
@@ -66,5 +109,6 @@ Prerequisites
 
         Verify the location of riscv64-unknown-elf-gcc:
           which riscv64-unknown-elf-gcc
+
         The expected location is:
           /tools/riscv_tools/dev/bin/riscv64-unknown-elf-gcc
