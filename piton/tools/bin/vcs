@@ -1,10 +1,118 @@
 #! /usr/bin/env bash
 
-## Fake compiler
+
+
+########################################################################################
+# NAME
+#     SetProjectOptions()
+#
+# SYNOPSIS
+#     Set project-specific options.
+#
+# INPUT
+#     none
+#
+# OUTPUT
+#     none
+########################################################################################
+function SetProjectOptions()
+{
+    compArg+=" +define+UVM_DIRECTC_OPTS"                            # The customer is setting this option, and so are we;
+                                                                    # however, we don't know whether the setting is done
+                                                                    # at sims level, e.g.:
+                                                                    #   sims -vcs_build_arg="+define+UVM_DIRECTC_OPTS"
+                                                                    # or somewhere else
+    compArg+=" -allow-int-enum-assign"                              # workaround for a code that doesn't conform to the LRM
+    compArg+=" -warn DefNetNone"                                    # workaround for a code that doesn't conform to the LRM:
+                                                                    # - the author expects a net to be implicitly declared,
+                                                                    #   while
+                                                                    #     `default_nettype none
+                                                                    #   is in effect
+}
+
+
+
+########################################################################################
+# NAME
+#     N/A
+#
+# SYNOPSIS
+#     VCS to DSim adaptor: main body
+########################################################################################
 # version=$(date +%F.%H)
 myName=${0##*/}
 echo "[$myName] Arguments: $@"
 echo "[$myName] Current directory: $PWD"
 cp --verbose $VCS_HOME/synopsys/simv .
-echo "[$myName] Passing control to comp_cmd (DSim compilation/elaboration phase)"
-comp_cmd
+
+# adapt command line for DSim
+: ${PLAYBACK_FILE:=$MODEL_DIR/playback.sh}
+declare currArgIsPliTabLocation=0
+declare nextArgIsPliTabLocation=0
+declare currArgIsNtbOption=0
+declare nextArgIsNtbOption=0
+if [ -v USE_DPI ]
+then
+    declare pliLib=""
+else
+    declare pliLib="-pli_lib $DV_ROOT/tools/Linux/x86_64/lib/libdsimpli.so +acc+rwb"
+fi
+declare prependArg=0
+declare compCmd="dsim -genimage simimage"
+declare compArg="-work $MODEL_DIR/dsim_work"
+
+for arg
+do
+    prependArg=0
+    if (( currArgIsPliTabLocation ))
+    then
+        arg=$pliLib                                                 # adaptation rule: replace PliTabLocation by pliLib
+        nextArgIsPliTabLocation=0
+    elif [[ $arg == -P ]]
+    then
+        arg=""                                                      # adaptation rule: skip -P option
+        nextArgIsPliTabLocation=1
+    elif (( currArgIsNtbOption ))
+    then
+        arg="+incdir+$UVM_HOME/src $UVM_HOME/src/uvm_pkg.sv"        # adaptation rule: replace NtbOption by UVM
+        prependArg=1
+        nextArgIsNtbOption=0
+    elif [[ $arg == -ntb_opts ]]
+    then
+        arg=""                                                      # adaptation rule: skip -ntb_opts option
+        nextArgIsNtbOption=1
+    else
+        [[ $arg =~ ^-L.+ ]]         &&  arg=""                      # adaptation rule: the original intent is to specify a pathname
+                                                                    #                  where to search for a shared library; given that
+                                                                    #                  the library is specified using a full path
+                                                                    #                  (see pliLib), there is no need to adapt this option
+        [[ $arg == -timescale=* ]]  &&  arg="${arg/=/ }"            # adaptation rule: -timescale shall be followed by a blank
+        [[ $arg =~ ^-l.+ ]]         &&  arg=""                      # adaptation rule: DSim use model for PLI handling differs (see pliLib)
+        [[ $arg == -V ]]            &&  arg=""                      # adaptation rule: there is no way to trace commands invoked by DSim
+        [[ $arg == +rad ]]          &&  arg=""                      # adaptation rule: there is no way to instruct DSim to perform
+                                                                    #                  additional optimization
+        [[ $arg == -Xstrict=* ]]    &&  arg=""                      # adaptation rule: the meaning of this option is not understood
+        [[ $arg == -notice ]]       &&  arg=""                      # adaptation rule: there is no way to instruct DSim to bump up
+                                                                    #                  the verbosity of flagged exceptions
+        [[ $arg == +lint=* ]]       &&  arg=""                      # adaptation rule: the original intent is to suppress a subset
+                                                                    #                  of checks, i.e. VCDE,VNGS,PCTIO-L,PCTIO; however,
+                                                                    #                  the meaning of these categories is not understood
+        [[ $arg == +warn=all ]]     &&  arg=""                      # adaptation rule: the original intent is to permit to flag all
+                                                                    #                  warnings; DSim is going to do so anyway
+        [[ $arg == -sverilog ]]     &&  arg="${arg/sverilog/sv}"    # adaptation rule: treat SystemVerilog-2012 keywords as reserve
+                                                                    #                  in any source file (regardless of suffix)
+        [[ $arg == +systemverilogext* ]]  &&  arg=""                # adaptation rule: the original intent is to specify a known
+                                                                    #                  suffix for SystemVerilog filenames; the intent is
+                                                                    #                  redundant whenever the previous option is in effect
+        [[ $arg == +vpi ]]          &&  arg=""                      # adaptation rule: DSim use model for PLI handling differs (see pliLib)
+    fi
+    [[ -n "$arg" ]]  &&  { ((prependArg)) && compArg="$arg $compArg" || compArg+=" $arg"; }
+    currArgIsPliTabLocation=$nextArgIsPliTabLocation
+    currArgIsNtbOption=$nextArgIsNtbOption
+done
+SetProjectOptions
+compCmd+=" $compArg"
+echo "$compCmd" | tee --append $PLAYBACK_FILE
+
+# pass control to DSim compilation/elaboration phase
+$compCmd

@@ -1,9 +1,34 @@
 #! /usr/bin/env bash
 
-## fake simulation executable
+
+
+########################################################################################
+# NAME
+#     N/A
+#
+# SYNOPSIS
+#     VCS to DSim adaptor: main body
+########################################################################################
 # version=$(date +%F.%H)
 myName=${0##*/};
 echo "[$myName] Arguments: $@"
 echo "[$myName] Current directory: $PWD"
-echo "[$myName] Passing control to sim_cmd (DSim run phase) along with the arguments"
-sim_cmd $@
+
+# adapt command line for DSim
+: ${PLAYBACK_FILE:=$MODEL_DIR/playback.sh}
+if [ -v USE_DPI ]
+then
+    declare pliLib="-sv_lib $DV_ROOT/tools/Linux/x86_64/lib/libdsimdpi.so"
+else
+    declare pliLib="-pli_lib $DV_ROOT/tools/Linux/x86_64/lib/libdsimpli.so +acc+rwb"
+fi
+declare simCmd="dsim -image simimage -sv_lib $UVM_HOME/src/dpi/libuvm_dpi.so $pliLib"
+for arg
+do
+   [[ $arg == +vcs+dumpvarsoff ]]  &&  arg=""
+   [[ -n "$arg" ]]  &&  simCmd+=" $arg"
+done
+echo "$simCmd" | tee --append $PLAYBACK_FILE
+
+# pass control to DSim run phase
+$simCmd
