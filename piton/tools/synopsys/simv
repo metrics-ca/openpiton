@@ -25,8 +25,9 @@ fi
 declare simCmd="dsim -image simimage -sv_lib $UVM_HOME/src/dpi/libuvm_dpi.so $pliLib"
 for arg
 do
-   [[ $arg == +vcs+dumpvarsoff ]]  &&  arg=""
-   [[ -n "$arg" ]]  &&  simCmd+=" $arg"
+    [[ $arg == +vcs+dumpvarsoff ]]  &&  arg=""                  # adaptation rule: there is no way to instruct DSim to suppress
+                                                                #                  $dumpvars task
+    [[ -n "$arg" ]]  &&  simCmd+=" $arg"
 done
 echo "$simCmd" | tee --append $PLAYBACK_FILE
 
