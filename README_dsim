@@ -49,8 +49,8 @@ Prerequisites
         git status
 
       The expected status is:
-        On branch op-dev-metrics-new-flow_demo
-        Your branch is up to date with 'origin/op-dev-metrics-new-flow_demo'.
+        On branch op-dev-metrics-tmp-flow
+        Your branch is up to date with 'origin/op-dev-metrics-tmp-flow'.
 
         nothing to commit, working tree clean
 
