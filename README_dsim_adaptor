@@ -1,0 +1,95 @@
+Support Ariane RV64IMAC Core
+============================
+
+Assuming all prerequisites have been completed, here is all you need to do to run the test:
+      cd <top of the repository>
+      source ./setup.bash
+      cd ./build
+      mkplilib clean dsim
+
+  - If you would prefer to run a test case for demo purposes (where the test is a bit
+    downsized to pass), do these steps:
+      mkplilib dsim_dpi
+      USE_DPI=1 sims -sys=manycore -x_tiles=1 -y_tiles=1 -clean -vcs_build -ariane -config_rtl=PITON_DPI -config_rtl=PITON_NO_CHIP_BRIDGE -config_rtl=SYNC_MUX
+      USE_DPI=1 sims -sys=manycore -x_tiles=1 -y_tiles=1 -vcs_run -ariane hello_world_many.c -rtl_timeout 100000
+
+  - If you would prefer to run using VPI, do these steps:
+      mkplilib dsim
+      sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -vcs_build -ariane
+      sims -sys=manycore -x_tiles=2 -y_tiles=2 -vcs_run -ariane hello_world_many.c -rtl_timeout 10000000
+
+  - If you would prefer to run using DPI, do these steps:
+      mkplilib dsim_dpi
+      USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -vcs_build -ariane -config_rtl=PITON_DPI
+      USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -vcs_run -ariane hello_world_many.c -rtl_timeout 10000000
+
+
+Prerequisites
+=============
+
+1. Install libbit-vector-perl library (done for eng-1 host):
+   for Debian-10, it is https://packages.debian.org/buster/libbit-vector-perl
+
+2. Clone project
+
+   a) Clone superproject, and navigate to its top-level directory:
+        git clone -b op-dev-metrics-tmp-flow git@github.com:metrics-ca/openpiton.git
+        cd openpiton
+
+      Note that from this point forward, your current working directory is assumed
+      to be at the top of the repository.
+
+   b) Populate submodule directories
+      By default, `git clone ...` doesn't populate directories that contain
+      submodules.  You need to instruct git to do so:
+        git submodule update --init --recursive
+
+      Note that this will take a while.  Once completed, verify the working tree
+      status:
+        git status
+
+      The expected status is:
+        On branch op-dev-metrics-tmp-flow
+        Your branch is up to date with 'origin/op-dev-metrics-tmp-flow'.
+
+        nothing to commit, working tree clean
+
+      If the status contains anything else, e.g.:
+        Changes not staged for commit:
+          . . .
+          (commit or discard the untracked or modified content in submodules)
+                modified:   piton/design/chip/tile/ariane (modified content)
+
+      , then there is something wrong with your working tree.
+
+      Note that the act of running a test will modify some files in submodules.
+      After you run a test (at least once), don't get alarmed upon seeing that
+      `git status` indicates modified files.
+
+3. Apply workaround
+   There is a temporary workaround for Fibery bug-43.  You need to apply it to
+   the design:
+     cp fix_for_glitch/wt_dcache_wbuffer.sv piton/design/chip/tile/ariane/src/cache_subsystem/wt_dcache_wbuffer.sv
+
+4. Prepare RISC-V toolchain, and the components needed for tests:
+
+   a) Build the RISC-V toolchain, and the components:
+        export ROOT=$PITON_ROOT
+        nice -n 19 ${PITON_ROOT}/piton/ariane_build_tools.sh
+
+      Note that this will take a while.  Once completed, verify the location of
+      riscv64-unknown-elf-gcc:
+        which riscv64-unknown-elf-gcc
+
+      The expected location is:
+        /scratch/user/$USER/tool/riscv_install/bin/riscv64-unknown-elf-gcc
+
+   b) WARNING
+        This step is needed only if the previous step (a) is unsuccessful:
+          module load riscv_tools/dev
+
+        Verify the location of riscv64-unknown-elf-gcc:
+          which riscv64-unknown-elf-gcc
+
+        The expected location is:
+          /tools/riscv_tools/dev/bin/riscv64-unknown-elf-gcc
