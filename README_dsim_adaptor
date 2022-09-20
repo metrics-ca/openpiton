@@ -2,45 +2,26 @@ Support Ariane RV64IMAC Core
 ============================
 
 Assuming all prerequisites have been completed, here is all you need to do to run the test:
-
-      cd <top of the repository>  # which is where you currently are reading this file
+      cd <top of the repository>
       source ./setup.bash
       cd ./build
       mkplilib clean dsim
 
-      - If you would prefer to run a test case for demo purposes (where the test is a bit
-        downsized to pass), do these steps:
-           mkplilib dsim_dpi
-           USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -dsim_build -ariane -config_rtl=PITON_DPI -config_rtl=PITON_NO_CHIP_BRIDGE -config_rtl=SYNC_MUX -dsim_build_args="+acc -opt-comb-glitch"
-           USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -dsim_run -ariane hello_world_many.c -rtl_timeout 100000 -sim_run_args="+acc"
+  - If you would prefer to run a test case for demo purposes (where the test is a bit
+    downsized to pass), do these steps:
+      mkplilib dsim_dpi
+      USE_DPI=1 sims -sys=manycore -x_tiles=1 -y_tiles=1 -clean -vcs_build -ariane -config_rtl=PITON_DPI -config_rtl=PITON_NO_CHIP_BRIDGE -config_rtl=SYNC_MUX
+      USE_DPI=1 sims -sys=manycore -x_tiles=1 -y_tiles=1 -vcs_run -ariane hello_world_many.c -rtl_timeout 100000
 
-        Results:
-          Expect a pass:
-            grep -F "GOOD TRAP" sim.log
-            69553500: Simulation -> PASS (HIT GOOD TRAP)
+  - If you would prefer to run using VPI, do these steps:
+      mkplilib dsim
+      sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -vcs_build -ariane
+      sims -sys=manycore -x_tiles=2 -y_tiles=2 -vcs_run -ariane hello_world_many.c -rtl_timeout 10000000
 
-          Here are the approx. run-times for the various tests, where Ariane tile
-          configuration is 1x1:
-            accu_test.c       1m52s
-            add_shared_var.c    16s
-            amo_align.c         21s
-            clint_plic_access.c 15s
-            hello_world.c       45s
-            hello_world_many.c  30s
-            lrsc_single.c        7s
-            lrsc_test.c          8s
-
-      - If you would prefer to run using VPI, do these steps:
-
-           mkplilib dsim
-           sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -dsim_build -ariane
-           sims -sys=manycore -x_tiles=2 -y_tiles=2 -dsim_run -ariane hello_world_many.c -rtl_timeout 10000000
-
-      - If you would prefer to run using DPI, do these steps:
-
-           mkplilib dsim_dpi
-           USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -dsim_build -ariane -config_rtl=PITON_DPI
-           USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -dsim_run -ariane hello_world_many.c -rtl_timeout 10000000
+  - If you would prefer to run using DPI, do these steps:
+      mkplilib dsim_dpi
+      USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -clean -vcs_build -ariane -config_rtl=PITON_DPI
+      USE_DPI=1 sims -sys=manycore -x_tiles=2 -y_tiles=2 -vcs_run -ariane hello_world_many.c -rtl_timeout 10000000
 
 
 Prerequisites
@@ -52,7 +33,7 @@ Prerequisites
 2. Clone project
 
    a) Clone superproject, and navigate to its top-level directory:
-        git clone -b op-dev-metrics-new-flow_demo git@github.com:metrics-ca/openpiton.git
+        git clone -b op-dev-metrics-tmp-flow git@github.com:metrics-ca/openpiton.git
         cd openpiton
 
       Note that from this point forward, your current working directory is assumed
@@ -68,8 +49,8 @@ Prerequisites
         git status
 
       The expected status is:
-        On branch op-dev-metrics-new-flow_demo
-        Your branch is up to date with 'origin/op-dev-metrics-new-flow_demo'.
+        On branch op-dev-metrics-tmp-flow
+        Your branch is up to date with 'origin/op-dev-metrics-tmp-flow'.
 
         nothing to commit, working tree clean
 
@@ -94,7 +75,7 @@ Prerequisites
 
    a) Build the RISC-V toolchain, and the components:
         export ROOT=$PITON_ROOT
-        ./piton/ariane_build_tools.sh
+        nice -n 19 ${PITON_ROOT}/piton/ariane_build_tools.sh
 
       Note that this will take a while.  Once completed, verify the location of
       riscv64-unknown-elf-gcc:

@@ -4,8 +4,7 @@ export PITON_ROOT=$(pwd)
 
 source ${PITON_ROOT}/piton/piton_settings.bash
 
-source piton/ariane_setup.sh
+source ${PITON_ROOT}/piton/ariane_setup.sh
 
-module use -a $DV_ROOT/tools/Modules
-module load dsim-openpiton
-
+module load dsim-daily
+export VCS_HOME=$DV_ROOT/tools      # enable VCS-to-DSim adaptor
