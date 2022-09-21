@@ -2,16 +2,22 @@ Support Ariane RV64IMAC Core
 ============================
 
 Assuming all prerequisites have been completed, here is all you need to do to run the test:
-      cd <top of the repository>
+      cd <top of the repository>  # which is where you currently are reading this file
       source ./setup.bash
       cd ./build
       mkplilib clean dsim
 
   - If you would prefer to run a test case for demo purposes (where the test is a bit
     downsized to pass), do these steps:
-      mkplilib dsim_dpi
-      USE_DPI=1 sims -sys=manycore -x_tiles=1 -y_tiles=1 -clean -vcs_build -ariane -config_rtl=PITON_DPI -config_rtl=PITON_NO_CHIP_BRIDGE -config_rtl=SYNC_MUX
-      USE_DPI=1 sims -sys=manycore -x_tiles=1 -y_tiles=1 -vcs_run -ariane hello_world_many.c -rtl_timeout 100000
+      - without waveforms dump:
+          mkplilib dsim_dpi
+          USE_DPI=1 sims -sys=manycore -x_tiles=1 -y_tiles=1 -clean -vcs_build -ariane -config_rtl=PITON_DPI -config_rtl=PITON_NO_CHIP_BRIDGE -config_rtl=SYNC_MUX
+          USE_DPI=1 sims -sys=manycore -x_tiles=1 -y_tiles=1 -vcs_run -ariane hello_world_many.c -rtl_timeout 100000
+
+      - with waveforms dump:
+          mkplilib dsim_dpi
+          USE_DPI=1 sims -sys=manycore -x_tiles=1 -y_tiles=1 -clean -vcs_build -ariane -config_rtl=PITON_DPI -config_rtl=PITON_NO_CHIP_BRIDGE -config_rtl=SYNC_MUX -dsim_build_args="+acc+b"
+          USE_DPI=1 sims -sys=manycore -x_tiles=1 -y_tiles=1 -vcs_run -ariane hello_world_many.c -rtl_timeout 100000 -sim_run_args=+acc+b -sim_run_args=-waves -sim_run_args=hello_world_many.vcd
 
   - If you would prefer to run using VPI, do these steps:
       mkplilib dsim
@@ -33,7 +39,7 @@ Prerequisites
 2. Clone project
 
    a) Clone superproject, and navigate to its top-level directory:
-        git clone -b op-dev-metrics-tmp-flow git@github.com:metrics-ca/openpiton.git
+        git clone -b op-dev-metrics git@github.com:metrics-ca/openpiton.git
         cd openpiton
 
       Note that from this point forward, your current working directory is assumed
@@ -49,8 +55,8 @@ Prerequisites
         git status
 
       The expected status is:
-        On branch op-dev-metrics-tmp-flow
-        Your branch is up to date with 'origin/op-dev-metrics-tmp-flow'.
+        On branch op-dev-metrics
+        Your branch is up to date with 'origin/op-dev-metrics'.
 
         nothing to commit, working tree clean
 
