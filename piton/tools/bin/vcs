@@ -58,6 +58,7 @@ else
     declare pliLib="-pli_lib $DV_ROOT/tools/Linux/x86_64/lib/libdsimpli.so +acc+rwb"
 fi
 declare prependArg=0
+declare pliTabCounter=0
 declare compCmd="dsim -genimage simimage"
 declare compArg="-work $MODEL_DIR/dsim_work"
 
@@ -66,7 +67,8 @@ do
     prependArg=0
     if (( currArgIsPliTabLocation ))
     then
-        arg=$pliLib                                                 # adaptation rule: replace PliTabLocation by pliLib
+        [[ $pliTabCounter -eq 0 ]]  &&  arg=$pliLib  ||  arg=""     # adaptation rule: replace PliTabLocation(s) by single pliLib
+        (( pliTabCounter += 1 ))
         nextArgIsPliTabLocation=0
     elif [[ $arg == -P ]]
     then
