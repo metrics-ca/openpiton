@@ -115,3 +115,14 @@ Prerequisites
 
         The expected location is:
           /tools/riscv_tools/dev/bin/riscv64-unknown-elf-gcc
+
+5.  Set up DSim
+    For example:
+        module load dsim-daily
+    or:
+        export DSIM_HOME=<path>
+        export PATH=${DSIM_HOME}/bin:${PATH}
+        export LD_LIBRARY_PATH=${DSIM_HOME}/lib:${LD_LIBRARY_PATH}
+        module load llvm
+        module load dsim-deps
+        export UVM_HOME=${DSIM_HOME}/uvm-1.2
